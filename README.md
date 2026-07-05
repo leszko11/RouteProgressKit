@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Assets/logo.png" width="220" alt="RouteProgressKit logo">
+  <img src="Assets/logo.png" width="128" alt="RouteProgressKit logo">
 </p>
 
 # RouteProgressKit
