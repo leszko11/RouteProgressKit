@@ -1,10 +1,24 @@
 <p align="center">
-  <img src="Assets/logo.png" width="128" alt="RouteProgressKit logo">
+  <img src="Assets/logo.png" width="400" max-width="80%" alt="RouteProgressKit logo">
 </p>
 
-# RouteProgressKit
+<h1 align="center">RouteProgressKit</h1>
 
-RouteProgressKit is a lightweight Swift Package Manager library for route-based outdoor activities: trail runs, races, hikes, bike routes, and other GPX-backed courses.
+<p align="center">
+  A lightweight Swift package for route progress, GPX geometry, elevation, ETA, and cutoff tracking.
+</p>
+
+<p align="center">
+  <a href="https://swiftpackageindex.com/leszko11/RouteProgressKit">
+    <img src="https://img.shields.io/endpoint?url=https://swiftpackageindex.com/api/packages/leszko11/RouteProgressKit/badge?type=swift-versions" alt="Swift versions">
+  </a>
+  <a href="https://swiftpackageindex.com/leszko11/RouteProgressKit">
+    <img src="https://img.shields.io/endpoint?url=https://swiftpackageindex.com/api/packages/leszko11/RouteProgressKit/badge?type=platforms" alt="Platforms">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT license">
+  </a>
+</p>
 
 It answers the practical questions an app needs during an activity:
 
@@ -196,45 +210,6 @@ Cutoff states are:
 - `.missed`
 
 Configure the warning threshold with `RouteProgressCalculator(plan:cutoffWarningThreshold:)`.
-
-## DFBG-Inspired Example Data
-
-This package was initially exercised with public DFBG 2026 course material:
-
-- [DFBG courses](https://dfbg.pl/en/courses)
-- [Golden Mountains Trail](https://dfbg.pl/en/courses/golden-mountains-trail)
-- [Golden Mountains Trail profile PDF](https://dfbg.pl/images/trasy/pliki/NEW-2026-33.pdf)
-
-DFBG-specific routes and aid stations are not part of the public API. Use `RouteWaypoint` and `RoutePlan` to model event-specific data in your app.
-
-For local verification with downloaded DFBG GPX files, run:
-
-```bash
-DFBG_GPX_FIXTURE_DIR=/Users/leszko11/Downloads swift test
-```
-
-The test suite only reads those files when the environment variable is set; full event GPX files are not committed as package resources.
-
-## Development
-
-Run tests:
-
-```bash
-swift test 2>&1 | xcsift -f toon
-```
-
-Run a build:
-
-```bash
-swift build 2>&1 | xcsift -f toon
-```
-
-In restricted environments, SwiftPM may need workspace-local caches:
-
-```bash
-env CLANG_MODULE_CACHE_PATH=.build/clang-module-cache \
-  swift test --disable-sandbox --cache-path .build/swiftpm-cache 2>&1 | xcsift -f toon
-```
 
 ## License
 
