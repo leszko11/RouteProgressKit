@@ -175,6 +175,23 @@ public struct RouteProgressCalculator: Sendable {
         )
     }
 
+    /// Calculates progress for a coordinate and optional activity context.
+    public func progress(
+        at coordinate: RouteCoordinate,
+        timestamp: Date? = nil,
+        activityStartDate: Date? = nil,
+        currentSpeed: Double? = nil
+    ) throws -> RouteProgress {
+        try progress(
+            for: CurrentRouteLocation(
+                coordinate: coordinate,
+                timestamp: timestamp,
+                activityStartDate: activityStartDate,
+                currentSpeed: currentSpeed
+            )
+        )
+    }
+
     private func estimateETA(
         distance: Double,
         progressDistance: Double,

@@ -5,11 +5,11 @@ import PackageDescription
 let package = Package(
     name: "RouteProgressKit",
     platforms: [
-        .iOS(.v26),
-        .macOS(.v26),
-        .watchOS(.v26),
-        .tvOS(.v26),
-        .visionOS(.v26)
+        .iOS(.v17),
+        .macOS(.v14),
+        .watchOS(.v10),
+        .tvOS(.v17),
+        .visionOS(.v1)
     ],
     products: [
         .library(
