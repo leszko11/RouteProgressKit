@@ -32,13 +32,13 @@ The package is domain-only. It has no SwiftUI, UIKit, MapKit, CoreLocation, or t
 
 ## Platforms
 
-RouteProgressKit targets Apple platforms 26+:
+RouteProgressKit targets modern Apple platforms:
 
-- iOS 26+
-- macOS 26+
-- watchOS 26+
-- tvOS 26+
-- visionOS 26+
+- iOS 17+
+- macOS 14+
+- watchOS 10+
+- tvOS 17+
+- visionOS 1+
 
 The package uses Swift 6 mode and value types that are `Sendable` where appropriate.
 
@@ -159,12 +159,10 @@ If a waypoint does not provide `distanceAlongRoute`, `RoutePlan` projects it ont
 let calculator = RouteProgressCalculator(plan: plan)
 
 let progress = try calculator.progress(
-    for: CurrentRouteLocation(
-        coordinate: RouteCoordinate(latitude: 50.3436, longitude: 16.8881),
-        timestamp: Date(),
-        activityStartDate: startDate,
-        currentSpeed: 2.4
-    )
+    at: RouteCoordinate(latitude: 50.3436, longitude: 16.8881),
+    timestamp: Date(),
+    activityStartDate: startDate,
+    currentSpeed: 2.4
 )
 
 print(progress.progressFraction)
