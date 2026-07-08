@@ -38,4 +38,17 @@ enum Fixtures {
             ]
         )
     }
+
+    static func outAndBackRoute() throws -> Route {
+        try Route(
+            name: "Out and Back",
+            points: [
+                RoutePoint(coordinate: .init(latitude: 0, longitude: 0), elevation: 10),
+                RoutePoint(coordinate: .init(latitude: 0, longitude: 0.001), elevation: 11),
+                RoutePoint(coordinate: .init(latitude: 0, longitude: 0.002), elevation: 12),
+                RoutePoint(coordinate: .init(latitude: 0, longitude: 0.001), elevation: 11),
+                RoutePoint(coordinate: .init(latitude: 0, longitude: 0), elevation: 10)
+            ]
+        )
+    }
 }

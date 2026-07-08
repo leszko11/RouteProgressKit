@@ -110,7 +110,19 @@ public struct RouteProgressCalculator: Sendable {
 
     /// Calculates progress for a current location.
     public func progress(for currentLocation: CurrentRouteLocation) throws -> RouteProgress {
-        guard let match = plan.route.polyline.nearestPoint(to: currentLocation.coordinate) else {
+        try progress(for: currentLocation, previousDistanceFromStart: nil)
+    }
+
+    /// Calculates progress for a current location while preferring route
+    /// matches continuous with the last accepted progress distance.
+    public func progress(
+        for currentLocation: CurrentRouteLocation,
+        previousDistanceFromStart: Double?
+    ) throws -> RouteProgress {
+        guard let match = plan.route.polyline.nearestPoint(
+            to: currentLocation.coordinate,
+            previousDistanceFromStart: previousDistanceFromStart
+        ) else {
             throw RouteProgressError.insufficientRoutePoints
         }
 

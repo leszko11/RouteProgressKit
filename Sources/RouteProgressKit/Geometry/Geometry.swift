@@ -95,15 +95,20 @@ public struct RoutePolyline: Equatable, Sendable {
 
     /// Finds the nearest source point and nearest projected point for a coordinate.
     public func nearestPoint(to coordinate: RouteCoordinate) -> LocationMatch? {
-        guard let first = points.first else { return nil }
+        nearestPoint(to: coordinate, previousDistanceFromStart: nil)
+    }
 
-        let nearestSource = points.min {
-            $0.coordinate.distance(to: coordinate) < $1.coordinate.distance(to: coordinate)
-        } ?? first
+    /// Finds the nearest point, preferring candidates continuous with the last
+    /// accepted route distance when the same coordinate appears multiple times.
+    public func nearestPoint(
+        to coordinate: RouteCoordinate,
+        previousDistanceFromStart: Double?
+    ) -> LocationMatch? {
+        guard let first = points.first else { return nil }
 
         guard points.count > 1 else {
             return LocationMatch(
-                nearestSourcePoint: nearestSource,
+                nearestSourcePoint: first,
                 projectedPoint: ProjectedRoutePoint(
                     coordinate: first.coordinate,
                     distanceFromStart: 0,
@@ -115,10 +120,30 @@ public struct RoutePolyline: Equatable, Sendable {
             )
         }
 
-        var bestProjectedPoint: ProjectedRoutePoint?
-        var bestDistance = Double.greatestFiniteMagnitude
+        let matches = candidateMatches(to: coordinate)
+        guard !matches.isEmpty else { return nil }
+        return Self.bestMatch(from: matches, previousDistanceFromStart: previousDistanceFromStart)
+    }
 
-        for index in 0..<(points.count - 1) {
+    func candidateMatches(to coordinate: RouteCoordinate) -> [LocationMatch] {
+        guard let first = points.first else { return [] }
+        guard points.count > 1 else {
+            return [
+                LocationMatch(
+                    nearestSourcePoint: first,
+                    projectedPoint: ProjectedRoutePoint(
+                        coordinate: first.coordinate,
+                        distanceFromStart: 0,
+                        segmentIndex: 0,
+                        fractionAlongSegment: 0,
+                        elevation: first.elevation
+                    ),
+                    offRouteDistance: first.coordinate.distance(to: coordinate)
+                )
+            ]
+        }
+
+        return (0..<(points.count - 1)).map { index in
             let start = points[index]
             let end = points[index + 1]
             let origin = start.coordinate
@@ -137,26 +162,75 @@ public struct RoutePolyline: Equatable, Sendable {
 
             let projectedCoordinate = start.coordinate.interpolated(to: end.coordinate, fraction: fraction)
             let offRouteDistance = projectedCoordinate.distance(to: coordinate)
-            guard offRouteDistance < bestDistance else { continue }
-
             let segmentDistance = end.distanceFromStart - start.distanceFromStart
-            bestDistance = offRouteDistance
-            bestProjectedPoint = ProjectedRoutePoint(
+            let projectedPoint = ProjectedRoutePoint(
                 coordinate: projectedCoordinate,
                 distanceFromStart: start.distanceFromStart + segmentDistance * fraction,
                 segmentIndex: index,
                 fractionAlongSegment: fraction,
                 elevation: interpolateElevation(start: start.elevation, end: end.elevation, fraction: fraction)
             )
+
+            return LocationMatch(
+                nearestSourcePoint: nearestSourcePoint(for: coordinate, start: start, end: end),
+                projectedPoint: projectedPoint,
+                offRouteDistance: offRouteDistance
+            )
+        }
+    }
+
+    private func nearestSourcePoint(
+        for coordinate: RouteCoordinate,
+        start: RoutePoint,
+        end: RoutePoint
+    ) -> RoutePoint {
+        start.coordinate.distance(to: coordinate) <= end.coordinate.distance(to: coordinate) ? start : end
+    }
+
+    private static func bestMatch(
+        from matches: [LocationMatch],
+        previousDistanceFromStart: Double?
+    ) -> LocationMatch {
+        let bestOffRouteDistance = matches.map(\.offRouteDistance).min() ?? 0
+        let closeMatches = matches.filter { $0.offRouteDistance <= bestOffRouteDistance + 20 }
+
+        guard let previousDistanceFromStart else {
+            return closeMatches.min(by: routeOrderSort) ?? matches[0]
         }
 
-        guard let projectedPoint = bestProjectedPoint else { return nil }
+        let backtrackTolerance = 25.0
+        let forwardMatches = closeMatches.filter {
+            $0.projectedPoint.distanceFromStart >= previousDistanceFromStart - backtrackTolerance
+        }
+        let candidates = forwardMatches.isEmpty ? closeMatches : forwardMatches
 
-        return LocationMatch(
-            nearestSourcePoint: nearestSource,
-            projectedPoint: projectedPoint,
-            offRouteDistance: bestDistance
-        )
+        return candidates.min {
+            progressAwareSort(
+                $0,
+                $1,
+                previousDistanceFromStart: previousDistanceFromStart
+            )
+        } ?? matches[0]
+    }
+
+    private static func routeOrderSort(_ lhs: LocationMatch, _ rhs: LocationMatch) -> Bool {
+        if lhs.offRouteDistance != rhs.offRouteDistance {
+            return lhs.offRouteDistance < rhs.offRouteDistance
+        }
+        return lhs.projectedPoint.distanceFromStart < rhs.projectedPoint.distanceFromStart
+    }
+
+    private static func progressAwareSort(
+        _ lhs: LocationMatch,
+        _ rhs: LocationMatch,
+        previousDistanceFromStart: Double
+    ) -> Bool {
+        let lhsDistanceDelta = abs(lhs.projectedPoint.distanceFromStart - previousDistanceFromStart)
+        let rhsDistanceDelta = abs(rhs.projectedPoint.distanceFromStart - previousDistanceFromStart)
+        if lhsDistanceDelta != rhsDistanceDelta {
+            return lhsDistanceDelta < rhsDistanceDelta
+        }
+        return routeOrderSort(lhs, rhs)
     }
 }
 

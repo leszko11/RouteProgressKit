@@ -83,4 +83,36 @@ struct RouteProgressTests {
         #expect(progress.etaToFinish?.basis == .elapsedPace)
         #expect(progress.etaToFinish?.duration != nil)
     }
+
+    @Test("progress-aware matching stays at start for shared start and finish coordinates")
+    func progressAwareMatchingPrefersStartWhenNoProgressExists() throws {
+        let route = try Fixtures.outAndBackRoute()
+        let plan = try RoutePlan(route: route)
+        let calculator = RouteProgressCalculator(plan: plan)
+
+        let progress = try calculator.progress(
+            for: CurrentRouteLocation(coordinate: route.points[0].coordinate),
+            previousDistanceFromStart: nil
+        )
+
+        #expect(progress.distanceFromStart == 0)
+        #expect(progress.progressFraction == 0)
+    }
+
+    @Test("progress-aware matching keeps overlapping segments continuous")
+    func progressAwareMatchingKeepsOverlappingSegmentsContinuous() throws {
+        let route = try Fixtures.outAndBackRoute()
+        let plan = try RoutePlan(route: route)
+        let calculator = RouteProgressCalculator(plan: plan)
+        let firstReturnPoint = route.points[3]
+
+        let progress = try calculator.progress(
+            for: CurrentRouteLocation(coordinate: firstReturnPoint.coordinate),
+            previousDistanceFromStart: route.points[2].distanceFromStart + 5
+        )
+
+        #expect(progress.distanceFromStart > route.points[2].distanceFromStart)
+        #expect(progress.distanceFromStart < route.totalDistance)
+        #expect(progress.segmentIndex >= 2)
+    }
 }
